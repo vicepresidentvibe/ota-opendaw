@@ -8,7 +8,6 @@ import {StudioService} from "@/service/StudioService"
 import {GlobalShortcuts} from "@/ui/shortcuts/GlobalShortcuts"
 import {VideoRenderer} from "@/video/VideoRenderer"
 import {createDebugMenu} from "@/service/DebugMenu"
-import {connectRoom} from "@/service/StudioLiveRoomConnect"
 import {NeuralDemux} from "@/service/NeuralDemux.tsx"
 import {NextcloudDialogs} from "@/project/NextcloudDialogs"
 
@@ -89,11 +88,6 @@ export const populateStudioMenu = (service: StudioService) => {
                             }).setTriggerProcedure(async () => Promises.tryCatch(VideoRenderer.render(
                                 service.project, service.profile.meta.name, service.project.engine.sampleRate)))
                         )),
-                    MenuItem.default({
-                        label: "Join Live Room...",
-                        icon: IconSymbol.Connected,
-                        separatorBefore: true
-                    }).setTriggerProcedure(() => connectRoom(service)),
                     MenuItem.default({
                         label: "Show MIDI-Keyboard",
                         icon: IconSymbol.Piano,
