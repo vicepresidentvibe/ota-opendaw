@@ -6,32 +6,34 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+WASM_PKG_VERSION="0.0.15"
+
 echo "== install"
 npm install --no-audit --no-fund
 
-# Three phases, and the order matters on a cold clone.
-# 1. core-wasm's esbuild bundle step imports @opendaw/studio-adapters and friends, which resolve
-#    through "./dist/index.js", so every dependency package has to be built first. app-studio is
-#    held back from this pass along with core-wasm: turbo keeps a filtered-out package out of scope
-#    but still pulls its build into the task graph through dependsOn "^build", so leaving app-studio
-#    in would drag core-wasm#build back in and run the Rust step this build exists to avoid.
-# 2. core-wasm's TS bundles and API, which the studio app imports.
-# 3. the studio app itself, invoked directly rather than through turbo for that same reason.
+# Build order matters on a cold clone. app-studio is held back from the turbo pass along with
+# core-wasm: turbo keeps a filtered-out package out of scope but still pulls its build into the
+# task graph through dependsOn "^build", so leaving app-studio in would drag core-wasm#build back
+# in and run the Rust step this build exists to avoid.
 echo "== build the packages the studio app depends on"
 npx turbo build --filter=@opendaw/app-studio... --filter=!@opendaw/studio-core-wasm --filter=!@opendaw/app-studio --output-logs=errors-only
 
-echo "== core-wasm: TS bundles and API only (the engine binaries come from npm below)"
-(cd packages/studio/core-wasm && npm run build:bundles && npm run build:api)
+# Take the WHOLE core-wasm dist from npm, not just the .wasm binaries. The repo's Rust source is
+# ahead of the newest published build: crates/engine exports report_message_len, which the
+# ${WASM_PKG_VERSION} binary does not have. Glue compiled from repo source therefore calls into a
+# function the prebuilt engine lacks, and the audio engine dies with
+# "report_message_len is not a function" the moment a project opens. The published glue and the
+# published binary are a matched pair, so use both. vite emits dist/wasm/ under wasm-engine/ itself.
+echo "== prebuilt core-wasm from npm (engine binaries and matching glue)"
+TMP="$(mktemp -d)"
+(cd "$TMP" && npm pack "@opendaw/studio-core-wasm@${WASM_PKG_VERSION}" >/dev/null 2>&1 && tar -xzf opendaw-studio-core-wasm-*.tgz)
+rm -rf packages/studio/core-wasm/dist
+mkdir -p packages/studio/core-wasm/dist
+cp -r "$TMP/package/dist/." packages/studio/core-wasm/dist/
+rm -rf "$TMP"
 
 echo "== build the studio app"
 (cd packages/app/studio && npm run build)
-
-echo "== prebuilt wasm engine from npm"
-TMP="$(mktemp -d)"
-(cd "$TMP" && npm pack @opendaw/studio-core-wasm@0.0.15 >/dev/null 2>&1 && tar -xzf opendaw-studio-core-wasm-*.tgz)
-mkdir -p packages/app/studio/dist/wasm-engine
-cp -r "$TMP/package/dist/wasm" packages/app/studio/dist/wasm-engine/
-rm -rf "$TMP"
 
 echo "== assemble deploy folder"
 rm -rf ota/deploy
@@ -41,6 +43,16 @@ find ota/deploy -type f \( -name '*.map' -o -name '*.br' \) -delete
 # The ONNX runtime (26.5 MB) only serves the AI features, which this deployment does not offer.
 # Removing it keeps every file under 10 MB, which static hosts handle without complaint.
 find ota/deploy -type f -name 'ort-wasm-*.wasm' -delete
+
+# The engine must be the one the glue was compiled against, or the app boots and then dies on use.
+if [ ! -f ota/deploy/wasm-engine/wasm/engine.wasm ]; then
+    echo "ERROR: wasm engine missing from the build output" >&2
+    exit 1
+fi
+if grep -q "report_message_len" ota/deploy/wasm-processor.*.js 2>/dev/null; then
+    echo "ERROR: glue calls report_message_len but the prebuilt engine does not export it" >&2
+    exit 1
+fi
 
 echo "== done"
 du -sh ota/deploy
