@@ -32,3 +32,6 @@ packages/app/studio/.env
 /tmp/
 /packages/app/studio/public/docs/scripting/
 ota/deploy/
+
+.vercel
+.env*
