@@ -1,0 +1,8 @@
+# Vercel does not read .gitignore, so build outputs have to be excluded here too,
+# otherwise a CLI deploy uploads ~180 MB of local artifacts and trips the Hobby
+# plan's 5000 files per 24 hours upload limit. Vercel rebuilds all of this itself.
+node_modules
+**/dist
+ota/deploy
+crates/target
+.git
