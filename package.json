@@ -4,7 +4,7 @@
   "private": true,
   "license": "AGPL-3.0-or-later",
   "engines": {
-    "node": ">=23"
+    "node": "24.x"
   },
   "scripts": {
     "cert": "bash ./scripts/cert.sh",
