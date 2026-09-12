@@ -9,17 +9,22 @@ cd "$ROOT"
 echo "== install"
 npm install --no-audit --no-fund
 
-# Three phases, and the order matters on a cold clone. core-wasm's esbuild bundle step imports
-# @opendaw/studio-adapters and friends, which resolve through "./dist/index.js", so those packages
-# have to be built first. The studio app in turn imports core-wasm's dist, so it has to come last.
-echo "== build the packages core-wasm depends on"
-npx turbo build --filter=@opendaw/studio-core-wasm... --filter=!@opendaw/studio-core-wasm --output-logs=errors-only
+# Three phases, and the order matters on a cold clone.
+# 1. core-wasm's esbuild bundle step imports @opendaw/studio-adapters and friends, which resolve
+#    through "./dist/index.js", so every dependency package has to be built first. app-studio is
+#    held back from this pass along with core-wasm: turbo keeps a filtered-out package out of scope
+#    but still pulls its build into the task graph through dependsOn "^build", so leaving app-studio
+#    in would drag core-wasm#build back in and run the Rust step this build exists to avoid.
+# 2. core-wasm's TS bundles and API, which the studio app imports.
+# 3. the studio app itself, invoked directly rather than through turbo for that same reason.
+echo "== build the packages the studio app depends on"
+npx turbo build --filter=@opendaw/app-studio... --filter=!@opendaw/studio-core-wasm --filter=!@opendaw/app-studio --output-logs=errors-only
 
 echo "== core-wasm: TS bundles and API only (the engine binaries come from npm below)"
 (cd packages/studio/core-wasm && npm run build:bundles && npm run build:api)
 
 echo "== build the studio app"
-npx turbo build --filter=@opendaw/app-studio... --filter=!@opendaw/studio-core-wasm --output-logs=errors-only
+(cd packages/app/studio && npm run build)
 
 echo "== prebuilt wasm engine from npm"
 TMP="$(mktemp -d)"
