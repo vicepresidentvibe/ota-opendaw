@@ -42,7 +42,7 @@ const ids = [
     "cab976763f0" // Vapor Run
 ]
 
-const listUrl = `https://api.opendaw.studio/music/list-by-ids.php?ids=${ids.join(",")}`
+const listUrl = `/vendor-api/music/list-by-ids.php?ids=${ids.join(",")}`
 
 const loadDemoProject = async (service: StudioService, json: DemoProjectJson) => {
     if (!await service.projectProfileService.approveLosingChanges()) {return}
@@ -53,7 +53,7 @@ const loadDemoProject = async (service: StudioService, json: DemoProjectJson) =>
     if (!approved) {return}
     const dialog = RuntimeNotifier.progress({headline: "Loading Demo Project"})
     const {status, value: arrayBuffer, error} = await Promises.tryCatch(
-        fetch(`https://api.opendaw.studio/music/uploads/${json.id}/project.odb`)
+        fetch(`/vendor-api/music/uploads/${json.id}/project.odb`)
             .then(network.progress(progress => dialog.message = `Downloading bundle file... (${(progress * 100).toFixed(1)}%)`))
             .then(response => response.arrayBuffer()))
     dialog.terminate()

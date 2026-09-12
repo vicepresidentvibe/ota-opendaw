@@ -15,7 +15,7 @@ type Construct = {
 
 export const DemoProject = ({json, load, extraClassName, cover}: Construct) => {
     const coverUrl = cover ?? (json.hasCover
-        ? `https://api.opendaw.studio/music/cover.php?id=${json.id}&preview=true`
+        ? `/vendor-api/music/cover.php?id=${json.id}&preview=true`
         : "./empty.svg")
     return (
         <div className={Html.buildClassList(className, extraClassName)} onclick={load}>
