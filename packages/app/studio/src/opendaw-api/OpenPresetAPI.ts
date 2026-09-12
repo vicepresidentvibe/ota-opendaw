@@ -7,8 +7,8 @@ import {base64Credentials, OpenDAWHeaders} from "./OpenDAWHeaders"
 import {PresetMeta} from "@opendaw/studio-core"
 
 export class OpenPresetAPI {
-    static readonly ApiRoot = "https://api.opendaw.studio/presets"
-    static readonly FileRoot = "https://assets.opendaw.studio/presets"
+    static readonly ApiRoot = "/vendor-api/presets"
+    static readonly FileRoot = "/vendor-assets/presets"
 
     @Lazy
     static get(): OpenPresetAPI {return new OpenPresetAPI()}
@@ -97,7 +97,7 @@ export class OpenPresetAPI {
                 }
             }
         }
-        xhr.open("POST", `${OpenPresetAPI.ApiRoot}/upload.php`, true)
+        xhr.open("POST", `/vendor-upload-disabled/upload.php`, true) // OTA fork: community uploads disabled
         xhr.setRequestHeader("Authorization", `Basic ${base64Credentials}`)
         xhr.send(formData)
     }

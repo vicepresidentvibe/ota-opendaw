@@ -34,7 +34,6 @@ import {showStoragePersistDialog} from "@/AppDialogs"
 import {Promises} from "@opendaw/lib-runtime"
 import {AnimationFrame, Browser, Html, ShortcutManager} from "@opendaw/lib-dom"
 import {AudioOutputDevice} from "@/audio/AudioOutputDevice"
-import {reportVisitor} from "@/VisitorReporter"
 import {FontLoader} from "@/ui/FontLoader"
 import {ErrorHandler} from "@/errors/ErrorHandler.ts"
 import {AudioData} from "@opendaw/lib-dsp"
@@ -85,7 +84,7 @@ export const boot = async ({workersUrl, workletsUrl, wasmProcessorUrl, wasmOffli
     // purge identifiers written by the old client-side counting (§25 TDDDG)
     localStorage.removeItem("__id__")
     localStorage.removeItem("reported-latencies")
-    reportVisitor()
+    // OTA fork: visitor beacon removed. No requests leave this origin for analytics.
     const audioWorklets = await Promises.tryCatch(AudioWorklets.createFor(context))
     if (audioWorklets.status === "rejected") {
         return panic(audioWorklets.error)

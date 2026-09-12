@@ -24,8 +24,8 @@ const SampleError = z.object({error: z.string()})
 
 // Standard openDAW samples (considered to be non-removable)
 export class OpenSampleAPI implements SampleAPI {
-    static readonly ApiRoot = "https://api.opendaw.studio/samples"
-    static readonly FileRoot = "https://assets.opendaw.studio/samples"
+    static readonly ApiRoot = "/vendor-api/samples"
+    static readonly FileRoot = "/vendor-assets/samples"
     static readonly IndexFile = `${OpenSampleAPI.FileRoot}/index.json`
 
     @Lazy
@@ -134,7 +134,7 @@ export class OpenSampleAPI implements SampleAPI {
                 }
             }
         }
-        xhr.open("POST", `${OpenSampleAPI.ApiRoot}/upload.php`, true)
+        xhr.open("POST", `/vendor-upload-disabled/upload.php`, true) // OTA fork: community uploads disabled
         xhr.setRequestHeader("Authorization", `Basic ${base64Credentials}`)
         xhr.send(formData)
     }

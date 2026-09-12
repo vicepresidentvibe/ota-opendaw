@@ -1,0 +1,36 @@
+# OTA fork of openDAW. Netlify configuration.
+# Publish directory is ota/deploy (built by ota/build.sh).
+
+[build]
+  publish = "ota/deploy"
+  command = "bash ota/build.sh"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+# Cross origin isolation. Required or the audio engine will not start.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+    Cross-Origin-Resource-Policy = "cross-origin"
+
+[[headers]]
+  for = "/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+# Same origin proxy for the vendor sample, preset, soundfont and model library.
+# The browser only ever talks to this hostname. Netlify fetches from the vendor.
+[[redirects]]
+  from = "/vendor-assets/*"
+  to = "https://assets.opendaw.studio/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/vendor-api/*"
+  to = "https://api.opendaw.studio/:splat"
+  status = 200
+  force = true

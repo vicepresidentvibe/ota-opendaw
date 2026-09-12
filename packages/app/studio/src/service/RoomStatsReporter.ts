@@ -2,33 +2,16 @@ import {UUID} from "@opendaw/lib-std"
 
 export type RoomResultStatus = "success" | "sync_timeout" | "socket_error" | "abort" | "unknown"
 
-const ENDPOINT = "https://api.opendaw.studio/rooms/room-counter.php"
+// OTA fork: no reporting endpoint.
 
 export const newRoomSessionId = (): string => UUID.toString(UUID.generate())
 
-export const reportRoomResult = (sessionId: string, status: RoomResultStatus): void => {
-    void fetch(ENDPOINT, {
-        method: "POST",
-        mode: "cors",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({action: "result", sessionId, status})
-    }).catch(() => {})
+export const reportRoomResult = (_sessionId: string, _status: RoomResultStatus): void => {
+    // OTA fork: room statistics are not reported.
 }
 
-export const reportRoomDuration = (sessionId: string, durationMinutes: number): void => {
-    if (durationMinutes <= 0) {return}
-    const body = JSON.stringify({action: "ended", sessionId, durationMinutes})
-    if (typeof navigator.sendBeacon === "function") {
-        navigator.sendBeacon(ENDPOINT, new Blob([body], {type: "application/json"}))
-        return
-    }
-    void fetch(ENDPOINT, {
-        method: "POST",
-        mode: "cors",
-        headers: {"Content-Type": "application/json"},
-        body,
-        keepalive: true
-    }).catch(() => {})
+export const reportRoomDuration = (_sessionId: string, _durationMinutes: number): void => {
+    // OTA fork: room statistics are not reported.
 }
 
 const HEARTBEAT_MS = 60_000

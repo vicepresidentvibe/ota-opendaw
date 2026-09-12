@@ -303,11 +303,8 @@ export class ErrorHandler {
             error: {...error, stack: error.stack?.slice(0, maxStackSize)},
             logs: LogBuffer.get()
         } satisfies ErrorLog)
-        fetch("https://logs.opendaw.studio/log.php", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body
-        }).then(console.info, console.warn)
+        // OTA fork: error reports stay in the browser console. Nothing is uploaded.
+        console.info("error report (not uploaded)", body.length, "bytes")
     }
 
     #showDialog(scope: string, error: ErrorInfo, probablyHasExtension: boolean, foreignOrigin: string | null): void {
