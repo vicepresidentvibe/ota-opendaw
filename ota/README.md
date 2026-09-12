@@ -34,8 +34,8 @@ still reference upstream servers if a user opens them. They are not loaded autom
   (`ActionButtons.tsx`), and "Join Live Room..." is removed from the openDAW menu
   (`StudioMenu.ts`) so the menu matches the dashboard.
 - Dashboard links trimmed to the upstream site, upstream GitHub, and this fork (`Links.tsx`).
-- A stub `public/sponsors.json` is shipped. Upstream generates that file outside the repo
-  build, so a self hosted copy 404s on every page load without it.
+- `ota/build.sh` generates a stub `public/sponsors.json`. Upstream generates that file outside the repo
+  build and gitignores it, so a self hosted copy 404s on every page load without it.
 
 ### Build
 The Rust WebAssembly engine is not compiled. `ota/build.sh` takes the published

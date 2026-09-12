@@ -38,6 +38,12 @@ mkdir -p packages/studio/core-wasm/dist
 cp -r "$TMP/package/dist/." packages/studio/core-wasm/dist/
 rm -rf "$TMP"
 
+# Upstream generates public/sponsors.json in its own deploy pipeline and gitignores it, so a
+# self hosted build 404s on every page load. Ship an empty one. The Sponsors rail then renders
+# its "Join them" link with no entries, which is what it already did behind the failed fetch.
+printf '{"fetchedAt": null, "totalCount": 0, "sponsors": []}
+' > packages/app/studio/public/sponsors.json
+
 echo "== build the studio app"
 (cd packages/app/studio && npm run build)
 
