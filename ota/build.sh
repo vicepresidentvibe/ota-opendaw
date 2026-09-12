@@ -46,9 +46,13 @@ rm -rf ota/deploy
 mkdir -p ota/deploy
 cp -r packages/app/studio/dist/. ota/deploy/
 find ota/deploy -type f \( -name '*.map' -o -name '*.br' \) -delete
-# The ONNX runtime (26.5 MB) only serves the AI features, which this deployment does not offer.
-# Removing it keeps every file under 10 MB, which static hosts handle without complaint.
-find ota/deploy -type f -name 'ort-wasm-*.wasm' -delete
+# The ONNX runtime (two 26.5 MB copies, one for the worker and one for the main bundle) is KEPT.
+# It powers Neural Demux, tempo detection and note detection, still reachable from the openDAW
+# menu. Vercel has no per-file limit for git-built output; its published 100 MB figure covers CLI
+# source uploads only. Netlify, the documented fallback, DOES warn above 10 MB, so if this ever
+# moves to Netlify the ort-wasm files have to be dropped again (and the AI features go with them).
+# Bandwidth, not file size, is the real constraint: stem separation streams a 304 MB model through
+# /vendor-assets on every use, against a 100 GB per month Hobby allowance.
 
 # The engine must be the one the glue was compiled against, or the app boots and then dies on use.
 if [ ! -f ota/deploy/wasm-engine/wasm/engine.wasm ]; then
