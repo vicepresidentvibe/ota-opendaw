@@ -11,12 +11,18 @@ WASM_PKG_VERSION="0.0.15"
 echo "== install"
 npm install --no-audit --no-fund
 
+# --force is not optional. Several package builds write generated, gitignored files OUTSIDE the
+# "outputs" that turbo.json declares: studio-scripting emits src/api.declaration.d.ts and the
+# scripting docs under app/studio/public/. A warm turbo cache (Vercel restores one between
+# deployments) therefore reports a cache hit, restores only dist/**, and the studio build then
+# fails on "Rollup failed to resolve @opendaw/studio-scripting/api.declaration?raw".
+#
 # Build order matters on a cold clone. app-studio is held back from the turbo pass along with
 # core-wasm: turbo keeps a filtered-out package out of scope but still pulls its build into the
 # task graph through dependsOn "^build", so leaving app-studio in would drag core-wasm#build back
 # in and run the Rust step this build exists to avoid.
 echo "== build the packages the studio app depends on"
-npx turbo build --filter=@opendaw/app-studio... --filter=!@opendaw/studio-core-wasm --filter=!@opendaw/app-studio --output-logs=errors-only
+npx turbo build --force --filter=@opendaw/app-studio... --filter=!@opendaw/studio-core-wasm --filter=!@opendaw/app-studio --output-logs=errors-only
 
 # Take the WHOLE core-wasm dist from npm, not just the .wasm binaries. The repo's Rust source is
 # ahead of the newest published build: crates/engine exports report_message_len, which the
