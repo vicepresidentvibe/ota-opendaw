@@ -9,9 +9,16 @@ cd "$ROOT"
 echo "== install"
 npm install --no-audit --no-fund
 
-echo "== build libraries and studio (skipping the Rust wasm step)"
-# core-wasm: TS bundles and API only. The engine binaries come from npm below.
+# Three phases, and the order matters on a cold clone. core-wasm's esbuild bundle step imports
+# @opendaw/studio-adapters and friends, which resolve through "./dist/index.js", so those packages
+# have to be built first. The studio app in turn imports core-wasm's dist, so it has to come last.
+echo "== build the packages core-wasm depends on"
+npx turbo build --filter=@opendaw/studio-core-wasm... --filter=!@opendaw/studio-core-wasm --output-logs=errors-only
+
+echo "== core-wasm: TS bundles and API only (the engine binaries come from npm below)"
 (cd packages/studio/core-wasm && npm run build:bundles && npm run build:api)
+
+echo "== build the studio app"
 npx turbo build --filter=@opendaw/app-studio... --filter=!@opendaw/studio-core-wasm --output-logs=errors-only
 
 echo "== prebuilt wasm engine from npm"
